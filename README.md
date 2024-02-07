@@ -340,6 +340,8 @@ const list_holder = createMountable((args) => {
   template(`${args.map(arg => arg.template('hello'))}`)
 })
 
+list_holder([]).mountSelf()(list_holder([])
+  .bake())
 
 list_holder([])
   .mount(document.getElementById('main'))
