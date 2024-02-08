@@ -4,7 +4,7 @@
 
 # Banana.js
 
-Banana is a front-end JavaScript framework for adding interactivity to server-driven websites (Think: Astro, HTMX, eCommerce Themes, HTML templates, etc.) 
+Banana is a front-end JavaScript framework for adding interactivity to server-driven websites (Think: Astro, HTMX, eCommerce Themes, HTML templates, etc.) Think of it like a composable, component-based jQuery. 
 
 Banana aims to be easily integrated into existing projects, and is mostly unopinionated about state management, templating, or styling, allowing you to pick and choose what works best for your project!
 
@@ -67,33 +67,9 @@ const counter = createComponent('count', () => {
 
 However, this example isn't ideal, as we still have to manually handle updating the state, and DOM in the event listener.
 
-### Mount, handle state
-In this example, we introduce the concept of a mount function, which is a function that runs after the component is mounted to the DOM, and move the state handling into the state object itself, when the dom is updated
-```js
-import { createComponent, on, state, mount } from 'banana.js'
-
-const counter = createComponent('count', () => {
-  let state = state()
-
-  // mount((element) => { // Hopefully we wont need this..
-    Object.defineProperty(state, 'count', {
-      get: () => state.count || 0,
-      set: (value) => {
-        state.count = value
-        element.innerText = value
-      }
-    })
-  // })
-
-  on('click', (e) => {
-    state.count++
-  })
-})
-```
-<!-- Using the this could be more simply written as: -->
 
 ### Using el
-Instead of managing the initial state in `mount` helper, the `state` helper allows one to define the initial state of the component, and add dynamic fields to the state object, however to update the innerText of the element, we are going to need a reference to the element. Thats where the `el` helper comes in. When called, it gets the element that the component is mounted to.
+Instead of managing the initial state in the event handler, the `state` helper allows one to define the initial state of the component, and add dynamic fields to the state object, however to update the innerText of the element, we are going to need a reference to the element. Thats where the `el` helper comes in. When called, it gets the element that the component is mounted to.
 
 ```js
 import { createComponent, on, state, el } from 'banana.js'
@@ -125,25 +101,19 @@ import { createComponent, on, state, value } from 'banana.js'
 const counter = createComponent('count', () => {
   let state = state()
 
-  let count = value('count', () => {
+  let count = value('count', 0, () => {
     initial(0)
 
-    set((old) => {
-      return old + 1
+    // set((old) => {
+    //   return old + 1
+    // })
+    method('inc', () => {
+      self(old => old + 1)
     })
 
     set(() => {
-      self(old => old + 1)
+      el().innerText = self() 
     })
-  }{
-    value: 0,
-    get: () => this.value || 0,
-    //get: () => state.count || 0,
-    set: (updated) => {
-      this.value = updated
-      //state.count = updated
-      el().innerText = updated
-    }
   })
   // count() will get
   // count('value') will set
@@ -158,6 +128,26 @@ const counter = createComponent('count', () => {
 ```
 
 ### Bind
+Values can be useful, but it can be a pain to manually update the DOM when the value changes. Banana provides a `bind` helper to do just that. The `bind` helper is just a shorthand for `value`, it will attempt to smartly determine the initial value, and the element to bind to. Note, this is just one-way binding, with the JS being the source of truth after the initial value is found in the DOM.
+
+```js
+import { createComponent, on, state, bind } from 'banana.js'
+
+const counter = createComponent('count', () => {
+  let state = state()
+
+  let count = bind('count', 0)
+
+  on('click', (e) => {
+    state.count++
+    count(old => old + 1)
+  })
+})
+
+```
+
+### Method 
+In the previous example, the count value is still being set in the event handler, and it might be more maintainable to move it out, so this functionality can be re-used. The `method` helper will take a function, then attach it to the element instance, and allow anyone with a reference to your component to call that method.
 
 
 ```js
@@ -168,13 +158,53 @@ const counter = createComponent('count', () => {
 
   let count = bind('count')
 
-  on('click', (e) => {
-    state.count++
+  let inc = method('inc', () => {
     count(old => old + 1)
+  })
+
+  on('click', (e) => {
+    inc()    // This is the same as doing el().inc() Because the inc function is placed on the element.
   })
 })
 
 ```
+
+### Events / Messages
+Directly calling methods on the element can be handy, but that's only useful if one has a reference to the element. This is where events and messages come in, they allow the component to communicate with the outside world.
+Banana will handle delegating events to the correct handler.
+
+Counter component
+```js
+import { createComponent, on, state, bind } from 'banana.js'
+
+const counter = createComponent('count', () => {
+  let count = bind('count')
+
+  let inc = method('inc', (value = 1) => {
+    return count(old => old + value)
+  })
+
+  on('inc', () => {
+    let by = msg() // This will get the message from the event
+    inc(by || 1)
+  })
+
+  on('click', (e) => {
+    inc()    // This is the same as doing el().inc() Because the inc function is placed on the element.
+  })
+})
+
+```
+
+Other JS
+```js
+import { event } from 'banana.js'
+
+event('inc', 10) // Banana will handle delegating the event, and calling the correct handler
+
+```
+
+
 
 
 Still interested? Read a full tutorial [here](https://github.com/banana-js/banana-docs/blob/master/docs/tutorial.md)
@@ -190,7 +220,7 @@ Inspired by Corset, Hooked-Elements, Surreal
 ## FAQ
 
 ### What isn't this good for?
-Banana does not have a build step, a robust templating system, or hydration, and is instead a traditional JavaScript library ala jQuery. Because of this, it probably isn't the best for client-rendered SPAs.
+Banana does not have a build step, a robust templating system, or hydration, and is instead a traditional JavaScript library a la jQuery. Because of this, it probably isn't the best for client-rendered SPAs.
 
 ### What do you mean by: _Server-driven websites_?
 I mean sites whose HTML is rendered on the server, and require little interactivity or client-side routing.
@@ -198,7 +228,8 @@ I mean sites whose HTML is rendered on the server, and require little interactiv
 ### Why?
 Because I wanted to. I wanted a declarative, component centered library to handle simple, common use-cases, that kept state in JavaScript, and found the current offerings in that area did not fit my taste.
 
-
+### Why not just use alpine.js?
+Unlike things like alpine.js, or amp-bind. By default, attributes do not add any interactivity, all interactivity is described in JavaScript, and not through attributes. Allowing one to use Banana in situations where one does not control the server markup.
 
 
 # Notes
@@ -225,7 +256,7 @@ const counters = createComponents(() => {
   template(`<h1> Counter ${key}</h1>`)
 })
 
-counters('key1').template
+counters('key1').template()
 
 
 
@@ -251,6 +282,8 @@ createComponent(() => {
   type()
   attachEvents(false)
   attachState()
+  parent() // If this is present, then the mutation observer can skip some work?
+  reuseContext(false)
 
   // I dont think this is necessary, maybe it can be done in the mount fn?
   // const hydrate = getHydrate()
@@ -294,11 +327,29 @@ state is attached to the element
 createComponent('counter', ()=>{
   let state = state({count: 0})
   let count = bind(() => {
-    type(attribute | innerText etc)
+    selector(() => el('.inc'))
+    type(attribute | innerText | attribute list | etc)
     name('count')
     get()
     set()
   })
+
+  
+
+  let { count, by } = hydrate(() => {
+    serialize()
+    deserialize()
+  }, html`<div>${skip}<count onclick="${"click"}" by="${by}">${"count"}</count>${skip}</div>`) // Steal this from sinuous.
+
+  count.deserialize(() => {
+
+  }) 
+
+  count.serialize(() => {
+
+  })
+
+
 }) 
 
 document.querySelector('counter').count
@@ -314,6 +365,7 @@ createComponent('counter', ()=>{
     set()
   })
 
+  let by = attr('by', el('#inc'), 
 
   cleanup(() => {
 
@@ -347,8 +399,347 @@ list_holder([])
   .mount(document.getElementById('main'))
   .update(['one', 'two', 'three'])
 
+
+
+let [updateCounter]= bind('.main', counter, {value: 0}) 
+updateCounter({value: 1}) // will call the template fn,
+
+let counter = bind('.main', counter, {value: 0}) // will call the template fn, and maybe we can say in the constructor fn of the component that it is mountable, that will allow us to lazily boot up a mutation observer.
+counter.template({value: 1})
+
+
+let table = createComponent(() => {
+  name('table')
+  mountable(true)
+}, () => {
+  let rows = ([])  
+
+
+  on('click', el('swap'), () => {
+    // table.template()
+    const item = rows[1];
+    rows[1] = rows[998];
+    rows[998] = rows;
+
+    table.mapTemplate(rows)
+  })
+
+
+  template((arr) => { // will save old
+    each(item => rows.template(item))
+    shouldUpdate((oldItem, newItem) => {})
+    key()
+  })
+})
+
+
+/// If the template fn is effectful, we dont need an update fn, or a mount fn. The whole create mountable doesnt need to exist?
+// If the template fn is effectful, we can update the chanaged node directly? if the template fn returns undefined, we wont re-render it.
+// We should stay away from this pattern.
+
+
+
 ```
+Build in Millions's mapArray
+
+
+
+I should make binds, state, on, event, and values work globally,
+```js
+//global
+on('click' () => {})
+// on selector
+on('click', selector, () => {})
+```
+
+
+JS Framework benchmark ideas
+
+```js
+let swapped = store(() => {
+  //get initial values, and bind
+
+  return [bind('.row')]
+}, () =>{
+})
+
+
+
+// update every 10
+
+const rows = findAll('row')
+
+const every10 = rows((idx) => {
+  return idx % 10 == 0
+})
+
+every10.forEach((component) => {
+  component.update()
+})
+
+
+
+// swap
+
+
+const app = createComponent('app', () => {
+  state.rows 
+  let values = value()
+
+  // If type == array use Million's map array
+  let rows = bindArray('rows', findAll('.row'))
+  let rows = componentArray('rows', findAll('.row'))
+  let row = findAll('.row')
+
+
+  
+  let rows = roles(() => {
+    name('rows')
+    type('many')
+    method('push', (...args) => {
+      for (let arg of args) {
+        self().push(arg)
+      }
+
+    })
+    method('pop', () => {
+
+    })
+    method('create', (number) => {
+
+    })
+  }, (props) => {
+    props()?
+
+    bind('')
+  }, () => key)
+
+  
+  rows.new(args) // will create new component, and add it to the rows array.
+  rows() // will check the dom for the rows.
+  rows.push()
+  rows.create('') // will check the dom for the rows.
+
+  let rows = bind(() => {
+    type('array')
+    type('component-array')
+    name('rows')
+    shouldUpdate()
+    update()
+    parent(selector)
+
+
+    key(() => {})
+  }, findAll('.row')
+  )
+
+
+let rows = array('rows', findAll('row'), () => {
+  map()
+  push()
+  pop()
+  method('clear', () => {
+    self().parent.innerHTML = ''
+  })
+})
+
+rows.clear()
+
+//in table:
+on('click', () => {
+  event().target.matches('.row')
+  event().target.
+})
+
+on('click', '#add100', () => {
+  table.addRow()
+  table.template([])
+} )
+
+// swap
+  let rows = []
+  rows = [rows[1], rows[0] ...rows]
+  table.template(rows)
+
+row.template(() => `label, classname, etc`)
+
+table(() => {
+  mapTemplate((arr) => {
+    map(item => {
+      return row.template(item)
+    })
+    key(() => String(item.id))
+
+    shouldUpdate((old, item) => {
+      item
+    })
+  }),
+
+  template((arr) => {
+    
+
+
+  })
+}) 
+
+
+
+object()
+
+
+```
+
+
+```js
+
+const counter = find('counter')
+
+event(counter, 'inc', 10)
+
+```
+
+
+You can always get the global state:
+
+```js
+window.banana = {
+  findCache: new Map(),
+  components: {
+    counter: {
+      state: {
+        get count() {},
+        set count() {},
+      },
+      events: {
+        click: () => {}
+      },
+      methods: {},
+      element: () => document.querySelector('counter'),
+      selector: () => /counter/,
+      attributes: {
+        count: {
+          initial: 0,
+          last: 1,
+          onChange: () => {}
+        }
+      },
+      props: {
+        is_true: true
+      },
+
+
+      template: ,
+
+      cleanup: [
+        () => {},
+        () => {},
+      ],
+
+      roles: {
+        inc: ()
+      }
+    },
+    counters: {
+      components: [
+        {key, state, element, attributes, roles}
+      ],
+
+      events:
+    }
+
+  }
+}
+```
+
+
+
+
+```js
+
+find('wordleTile', whereFn)
+const tiles = findAll('wordleTile')
+// This will return a proxy of the component context obj from above, and the element itself
+tiles['0,5'].innerText
+tiles['0,5'].
+
+```
+
+
+
+```js
+
+import { createComponent } from 'banana.js'
+
+const counter = createComponent('counter', () => {
+  // if no template is provided, it will detect the template from the html
+
+  template(`<count>🍌</count>`) // will turn into the following
+
+  template(({children}) => `<count>${children}</count>`) // will render html str, But maybe we can find the static parts of the template automatically? then only change those parts when the template fn is called again? think block dom + zone js? see uhtml for more.
+
+  template(document.createElement('count')) // will render the DOM node
+
+  template((props) => document.createElement(props.elementName))
+
+
+})
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+```js
+const counter = createComponent('counter' () => {
+  let count = bind('count')
+
+  on('click', el('.inc'), () => {
+    count(old => old + 1)
+  })
+  
+  on('click', el('.dec'), () => {
+    count(old => old - 1)
+  })
+})
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ---
+
+
 
 
 This repo is a template for quickly getting a Typescript npm package up and running.
