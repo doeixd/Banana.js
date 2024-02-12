@@ -52,9 +52,12 @@ let game = createComponent('wordle', () => {
 
   let rows = createComponents('rows', () => {
 
+    // If defined inside of another component, then, the parent will automatically be set?
     let tiles = createComponents('tile', () => {
       const game = context('game')
-      
+      const game = find('game')
+
+
 
     })
 
