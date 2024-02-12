@@ -48,12 +48,27 @@
 
 <script>
 
+let game = createComponent('wordle', () => {
 
+  let rows = createComponents('rows', () => {
+
+    let tiles = createComponents('tile', () => {
+      const game = context('game')
+      
+
+    })
+
+  })
+
+})
 
 let tiles = createComponents('tile', () => {
-  method('add', (letter) => {
+  method('insertLetter', (letter) => {
   
   })
+
+
+
 }, () => {})
 
 let keys = createComponents('key', () => {}, () => {
@@ -63,5 +78,14 @@ let keys = createComponents('key', () => {}, () => {
     tiles.add(letter())
   })
 })
+
+// if passed an array, it will update, but if not, it will get the one with that key?
+let A = keys('A')
+
+tiles.insertLetter(A.letter)
+tiles.backspaceLetter()
+tiles.
+
+
 
 </script>
