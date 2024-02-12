@@ -52,8 +52,8 @@ let game = createComponent('wordle', () => {
 
   let rows = createComponents('rows', () => {
 
-    // If defined inside of another component, then, the parent will automatically be set?
-    let tiles = createComponents('tile', () => {
+    // If defined inside of another component, then, the parent will automatically be set? and the mutation observer will only check the tiles underneith the matching parent?
+   let tiles = createComponents('tile', () => {
       const game = context('game')
       const game = find('game')
 
