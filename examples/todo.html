@@ -44,8 +44,8 @@
         all().filter(item => item.isComplete)
       )
     })
-
-  }, () => {
+                // The context from all the parents, will be on this object? or just use context('todo-item')
+  }, ({props}, {"todo-items", }) => {
     // let { key, isComplete } = bind_attrs('key', 'is-complete')
     // let text = bind_text()
     let key, isComplete, text;
@@ -57,6 +57,11 @@
 
     on('click', el('cross'), () => {
       all().removeTodo(key)
+      context('todo-item').removeTodo(key)
+      let all = find('todo-item').removeTodo(key)
+      
+
+
     })
 
     template(({key, isComplete, text}) => `
