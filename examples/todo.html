@@ -29,6 +29,9 @@
       return self().filter(item => item.isComplete)
     })
 
+    // where should i put these methods? on the parent?
+
+
     // by default it will update if the keys are different.
     shouldUpdate() 
 
@@ -64,6 +67,8 @@
       </todo-item>
     `)
   })
+
+  todoItems('4').isComplete = false
 
   todoItems.push({key: 4, isComplete: false, text: 'Buy Bread'})
 
