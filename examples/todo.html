@@ -1,0 +1,133 @@
+
+
+
+
+<app>
+  <input :role="input" type="text" placeholder="Add todo" />
+  <button :role="add-todo">Add Todo</button>
+  <todo-list>
+    <todo-item key="0" is-complete="true">
+      <box></box> 
+      Buy Milk
+      <cross></cross>
+    </todo-item>
+  </todo-list>
+</app>
+
+
+
+<script>
+  import { createComponent, roles, on, el, method, parent, emit } from 'banana.js'
+
+  // When 
+
+
+  // Bind components, will find the parent component and bind to it? maybe instead of bind_components, we can
+  // just use: createComponents, which will do the same thing?
+  let todoItems = bind_components('todo-item', () => {
+    method('done', () => {
+      return self().filter(item => item.isComplete)
+    })
+
+    // by default it will update if the keys are different.
+    shouldUpdate() 
+
+    // by default, if it's removed, it will remove it from the parent component. if its added, same thing, 
+    // if any hydrated values have changed, then it will update.
+    update()
+
+    method('removeTodo', (key) => {
+      return all(
+        all().filter(item => item.isComplete)
+      )
+    })
+
+  }, () => {
+    // let { key, isComplete } = bind_attrs('key', 'is-complete')
+    // let text = bind_text()
+    let key, isComplete, text;
+    bind_hydrate(`<todo-item key="${key}" is-complete="${isComplete}">${text}</todo-item>`)
+
+    on('click', el('box'), () => {
+      isComplete(!isComplete)
+    })
+
+    on('click', el('cross'), () => {
+      all().removeTodo(key)
+    })
+
+    template(({key, isComplete, text}) => `
+      <todo-item key="${key}" is-complete="${isComplete}">
+        <box></box> 
+        ${text}
+        <cross></cross>
+      </todo-item>
+    `)
+  })
+
+  todoItems.push({key: 4, isComplete: false, text: 'Buy Bread'})
+
+  on('click', el('add-todo'), () => {
+    todoItems.push({key: todoItems.length, isComplete: false, text: el('input').value})
+  })
+
+  const todoList = createComponent('todoList', () => {
+    method('removeTodo', (key) => {
+      todoItems(() => todoItems.filter(todoItem => todoItem.key !== key) )
+    })
+
+    var todoItems = roles(() => {
+      name('todo-items')
+      type('many')
+      method('push', () => {
+        self().push()
+      })
+    }, () => {
+      let { key, isComplete } = bind_attrs('key', 'is-complete')
+      let text = bind_text()
+
+      on('click', el('box'), () => {
+        isComplete(!isComplete)
+      })
+
+      on('click', el('cross'), () => {
+        parent().removeTodo(key)
+      })
+    })
+  })
+
+
+  const addTodo = createComponent('add-todo', () => {
+    on('click', () => {
+      emit('add_todo')
+    })
+  })
+
+  const app = createComponent('app', () => {
+
+    on('add_todo', () => {
+
+    })
+
+
+
+  })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>

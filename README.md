@@ -4,9 +4,9 @@
 
 # Banana.js
 
-Banana is a front-end JavaScript framework for adding interactivity to server-driven websites (Think: Astro, HTMX, eCommerce Themes, HTML templates, etc.) Think of it like a composable, component-based jQuery. 
+Banana is a front-end JavaScript framework for adding interactivity to server-driven websites (Think: Astro, HTMX, eCommerce Themes, HTML templates, etc.) Think of it like a composable, component-based jQuery.
 
-Banana aims to be easily integrated into existing projects, and is mostly unopinionated about state management, templating, or styling, allowing you to pick and choose what works best for your project!
+Banana aims to be easily integrated into existing projects, and is mostly unopinionated about state management, templating, or styling, allowing you to pick and choose what works best for your project! 
 
 Banana provides composable primitives, when combined together allow you to create complex and powerful behaviors.
 
@@ -189,6 +189,20 @@ const counter = createComponent('count', () => {
     inc(by || 1)
   })
 
+  on(() => {
+    name('inc')
+    type('global')
+  }, () => {
+    let by = msg() // This will get the message from the event
+    inc(by || 1)
+  })
+
+  global_on('inc', () => {
+    let by = msg() // This will get the message from the event
+    inc(by || 1)
+  })
+
+
   on('click', (e) => {
     inc()    // This is the same as doing el().inc() Because the inc function is placed on the element.
   })
@@ -230,6 +244,9 @@ Because I wanted to. I wanted a declarative, component centered library to handl
 
 ### Why not just use alpine.js?
 Unlike things like alpine.js, or amp-bind. By default, attributes do not add any interactivity, all interactivity is described in JavaScript, and not through attributes. Allowing one to use Banana in situations where one does not control the server markup.
+
+### Why not Web Components? 
+In many ways this library is my take on Web Components, however I believe my version of Web components are more composable, ergonomic (to my taste), and are not as concerned with templating.
 
 
 # Notes
@@ -279,7 +296,7 @@ createComponent(() => {
   name('counter')
   el()
   key()
-  type()
+  type() // if type is many, then it will have the functionality of the array helper.
   attachEvents(false)
   attachState()
   parent() // If this is present, then the mutation observer can skip some work?
@@ -295,6 +312,10 @@ createComponent(() => {
   return undefined // to handle hydration yourself
   return false
 }, ()=>{}) 
+
+let tiles = createComponents('tile', () => {
+  
+}, () => {})
 
 ```
 
@@ -533,6 +554,7 @@ const app = createComponent('app', () => {
   }, findAll('.row')
   )
 
+// The roles helper should be built upon the array helper, and the createComponent helper, and should have the functionality of Million js built in.
 
 let rows = array('rows', findAll('row'), () => {
   map()
