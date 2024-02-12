@@ -4,7 +4,7 @@
 
 # Banana.js
 
-Banana is a front-end JavaScript framework for adding interactivity to server-driven websites (Think: Astro, HTMX, eCommerce Themes, HTML templates, etc.) Think of it like a composable, component-based jQuery.
+Banana is a simple front-end JavaScript library for adding interactivity to server-driven websites (Think: Astro, HTMX, eCommerce Themes, HTML templates, etc.) It's like a composable, component-based jQuery.
 
 Banana aims to be easily integrated into existing projects, and is mostly unopinionated about state management, templating, or styling, allowing you to pick and choose what works best for your project! 
 
@@ -246,7 +246,10 @@ Because I wanted to. I wanted a declarative, component centered library to handl
 Unlike things like alpine.js, or amp-bind. By default, attributes do not add any interactivity, all interactivity is described in JavaScript, and not through attributes. Allowing one to use Banana in situations where one does not control the server markup.
 
 ### Why not Web Components? 
-In many ways this library is my take on Web Components, however I believe my version of Web components are more composable, ergonomic (to my taste), and are not as concerned with templating.
+In many ways this library is my take on Web Components. I've attempted to make a version of Web components that are more composable, ergonomic (to my taste), and are not as concerned with templating.
+
+### Why not use Signals?
+The use of manual getters/setters allows for better integration in to existing projects, and state management solutions, imho. 
 
 
 # Notes
