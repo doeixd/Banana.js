@@ -70,9 +70,23 @@ let tiles = createComponents('tile', () => {
   
   })
 
+  method('backspace', () => {
+    self().lastAdded().clear()
+  })
 
+  method('lastAdded', () => {
+    return children().findLast(o => !o.values.letter)
+  })
 
-}, () => {})
+  },
+ () => {
+
+  let letter = bind_text('letter')
+
+  method('clear', () => {
+    letter('')
+  })
+ })
 
 let keys = createComponents('key', () => {}, () => {
   let letter = bind_text('letter')
